@@ -5,10 +5,29 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <canvas id="game" width="800" height="600"></canvas>
-  <div id="inventory"></div>
-  <button onclick="saveGame()">Save</button>
-  <button onclick="loadGame()">Load</button>
+  <div id="main-menu">
+    <h1>Terraria-Like Game</h1>
+    <button onclick="startGame()">Play</button>
+    <button onclick="toggleSettings()">Settings</button>
+    <div id="settings" style="display:none;">
+      <h2>Controls</h2>
+      <ul>
+        <li>Arrow Keys: Move</li>
+        <li>Spacebar: Jump</li>
+        <li>Click: Place/Remove Block</li>
+        <li>Near Workbench: Craft Torch</li>
+        <li>Save/Load: Buttons below canvas</li>
+      </ul>
+      <h2>Player Color</h2>
+      <input type="color" id="playerColor" value="#0000ff" onchange="updatePlayerColor()" />
+    </div>
+  </div>
+
+  <canvas id="game" width="800" height="600" style="display:none;"></canvas>
+  <div id="inventory" style="display:none;"></div>
+  <button onclick="saveGame()" style="display:none;" id="saveBtn">Save</button>
+  <button onclick="loadGame()" style="display:none;" id="loadBtn">Load</button>
+
   <script src="game.js"></script>
 </body>
 </html>
