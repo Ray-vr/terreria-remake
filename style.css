@@ -1,15 +1,19 @@
 body {
   margin: 0;
-  overflow: hidden;
   background-color: #222;
   font-family: sans-serif;
   color: white;
+  text-align: center;
 }
 
 canvas {
   display: block;
   margin: auto;
   background-color: #87CEEB;
+}
+
+#main-menu {
+  padding-top: 100px;
 }
 
 #inventory {
