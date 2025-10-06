@@ -162,4 +162,4 @@ function exitGame() {
 }
 
 function clearSettings() {
-  document.getElement
+  document
