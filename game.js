@@ -1,75 +1,25 @@
-// Inventory
-let inventory = {
-  wood: 0,
-  stone: 0,
-  torch: 0
-};
+let playerColor = "#0000ff";
 
-function updateInventoryUI() {
-  const inv = document.getElementById("inventory");
-  inv.innerHTML = "";
-  Object.keys(inventory).forEach(item => {
-    const slot = document.createElement("div");
-    slot.textContent = inventory[item] > 0 ? `${item[0].toUpperCase()}:${inventory[item]}` : "";
-    inv.appendChild(slot);
-  });
+function startGame() {
+  document.getElementById("main-menu").style.display = "none";
+  document.getElementById("game").style.display = "block";
+  document.getElementById("inventory").style.display = "grid";
+  document.getElementById("saveBtn").style.display = "inline";
+  document.getElementById("loadBtn").style.display = "inline";
+  gameLoop();
 }
 
-// Simulate collecting resources
-canvas.addEventListener("click", (e) => {
-  const x = Math.floor(e.offsetX / tileSize + cameraX);
-  const y = Math.floor(e.offsetY / tileSize);
-  if (world[y] && world[y][x]) {
-    let biome = world[y][x];
-    if (biome === "forest") inventory.wood++;
-    if (biome === "underworld") inventory.stone++;
-    world[y][x] = 0;
-    updateInventoryUI();
-  }
-});
-
-// Crafting
-function craftTorch() {
-  if (inventory.wood >= 2 && inventory.stone >= 1) {
-    inventory.wood -= 2;
-    inventory.stone -= 1;
-    inventory.torch += 1;
-    alert("Crafted a torch!");
-    updateInventoryUI();
-  }
+function toggleSettings() {
+  const settings = document.getElementById("settings");
+  settings.style.display = settings.style.display === "none" ? "block" : "none";
 }
 
-// Trigger crafting near Work Bench
-function checkCrafting() {
-  stations.forEach(station => {
-    if (station.name === "Work Bench" &&
-        Math.abs(player.x - station.x) < 1 &&
-        Math.abs(player.y - station.y) < 1) {
-      craftTorch();
-    }
-  });
+function updatePlayerColor() {
+  playerColor = document.getElementById("playerColor").value;
 }
 
-// Save/Load
-function saveGame() {
-  const data = {
-    player,
-    inventory,
-    world
-  };
-  localStorage.setItem("terrariaSave", JSON.stringify(data));
-  alert("Game saved!");
-}
-
-function loadGame() {
-  const data = JSON.parse(localStorage.getItem("terrariaSave"));
-  if (data) {
-    player = data.player;
-    inventory = data.inventory;
-    world = data.world;
-    updateInventoryUI();
-    alert("Game loaded!");
-  } else {
-    alert("No save found.");
-  }
+// Replace drawPlayer function
+function drawPlayer() {
+  ctx.fillStyle = playerColor;
+  ctx.fillRect((player.x - cameraX) * tileSize, player.y * tileSize, tileSize, tileSize);
 }
