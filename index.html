@@ -89,139 +89,143 @@
   <button onclick="loadGame()" style="display:none;" id="loadBtn">Load</button>
 
   <script>
-    const canvas = document.getElementById("game");
-    const ctx = canvas.getContext("2d");
+    window.onload = function() {
+      const canvas = document.getElementById("game");
+      const ctx = canvas.getContext("2d");
 
-    const tileSize = 40;
-    const worldWidth = 200;
-    const worldHeight = 40;
-    let cameraX = 0;
-    let playerColor = "#0000ff";
+      const tileSize = 40;
+      const worldWidth = 200;
+      const worldHeight = 40;
+      let cameraX = 0;
+      let playerColor = "#0000ff";
 
-    const BIOMES = ["forest", "desert", "jungle", "underworld"];
-    const BIOME_COLORS = {
-      forest: "#228B22",
-      desert: "#DEB887",
-      jungle: "#006400",
-      underworld: "#4B0082",
-      dirt: "#654321"
-    };
+      const BIOMES = ["forest", "desert", "jungle", "underworld"];
+      const BIOME_COLORS = {
+        forest: "#228B22",
+        desert: "#DEB887",
+        jungle: "#006400",
+        underworld: "#4B0082",
+        dirt: "#654321"
+      };
 
-    let world = Array.from({ length: worldHeight }, () => Array(worldWidth).fill(0));
-    let biomeMap = [];
+      let world = Array.from({ length: worldHeight }, () => Array(worldWidth).fill(0));
+      let biomeMap = [];
 
-    for (let x = 0; x < worldWidth; x++) {
-      let biome = BIOMES[Math.floor(x / (worldWidth / BIOMES.length))];
-      biomeMap[x] = biome;
-      for (let y = worldHeight / 2; y < worldHeight; y++) {
-        world[Math.floor(y)][x] = biome;
-      }
-    }
-
-    for (let i = 0; i < 5; i++) {
-      let ix = Math.floor(Math.random() * worldWidth);
-      let iy = Math.floor(Math.random() * worldHeight / 2);
-      for (let y = -1; y <= 1; y++) {
-        for (let x = -2; x <= 2; x++) {
-          if (world[iy + y] && world[iy + y][ix + x] !== undefined) {
-            world[iy + y][ix + x] = "dirt";
-          }
+      for (let x = 0; x < worldWidth; x++) {
+        let biome = BIOMES[Math.floor(x / (worldWidth / BIOMES.length))];
+        biomeMap[x] = biome;
+        for (let y = worldHeight / 2; y < worldHeight; y++) {
+          world[Math.floor(y)][x] = biome;
         }
       }
-    }
 
-    let player = {
-      x: 10,
-      y: 10,
-      vx: 0,
-      vy: 0,
-      width: 1,
-      height: 1,
-      grounded: false,
-      hunger: 100,
-      class: "melee"
-    };
-
-    let inventory = { wood: 0, stone: 0, torch: 0 };
-    let stations = [{ name: "Work Bench", x: 20, y: worldHeight / 2 - 1 }];
-    let npcs = [{ name: "Guide", x: 15, y: worldHeight / 2 - 1, service: "tips" }];
-
-    let time = 0;
-    let isNight = false;
-    let isRaining = false;
-    let survivalMode = true;
-
-    function updateTime() {
-      time += 0.01;
-      if (time >= 24) time = 0;
-      isNight = time >= 18 || time < 6;
-      isRaining = Math.random() < 0.001;
-      if (survivalMode) {
-        player.hunger -= 0.01;
-        if (player.hunger <= 0) alert("You starved!");
-      }
-    }
-
-    function drawWorld() {
-      for (let y = 0; y < worldHeight; y++) {
-        for (let x = 0; x < worldWidth; x++) {
-          let tile = world[y][x];
-          if (tile) {
-            ctx.fillStyle = BIOME_COLORS[tile] || "#000";
-            ctx.fillRect((x - cameraX) * tileSize, y * tileSize, tileSize, tileSize);
-          }
-        }
-      }
-    }
-
-    function drawPlayer() {
-      ctx.fillStyle = playerColor;
-      ctx.fillRect((player.x - cameraX) * tileSize, player.y * tileSize, tileSize, tileSize);
-    }
-
-    function drawStations() {
-      stations.forEach(station => {
-        ctx.fillStyle = "#ccc";
-        ctx.fillRect((station.x - cameraX) * tileSize, station.y * tileSize, tileSize, tileSize);
-      });
-    }
-
-    function drawNPCs() {
-      npcs.forEach(npc => {
-        ctx.fillStyle = "#ff0";
-        ctx.fillRect((npc.x - cameraX) * tileSize, npc.y * tileSize, tileSize, tileSize);
-      });
-    }
-
-    function updateInventoryUI() {
-      const inv = document.getElementById("inventory");
-      inv.innerHTML = "";
-      Object.keys(inventory).forEach(item => {
-        const slot = document.createElement("div");
-        slot.textContent = inventory[item] > 0 ? `${item[0].toUpperCase()}:${inventory[item]}` : "";
-        inv.appendChild(slot);
-      });
-    }
-
-    function updatePhysics() {
-      player.vy += 0.5;
-      player.x += player.vx;
-      player.y += player.vy;
-
-      player.grounded = false;
-      for (let y = Math.floor(player.y); y < Math.ceil(player.y + player.height); y++) {
-        for (let x = Math.floor(player.x); x < Math.ceil(player.x + player.width); x++) {
-          if (world[y] && world[y][x]) {
-            if (player.vy > 0) {
-              player.y = y - player.height;
-              player.vy = 0;
-              player.grounded = true;
-            } else if (player.vy < 0) {
-              player.y = y + 1;
-              player.vy = 0;
+      for (let i = 0; i < 5; i++) {
+        let ix = Math.floor(Math.random() * worldWidth);
+        let iy = Math.floor(Math.random() * worldHeight / 2);
+        for (let y = -1; y <= 1; y++) {
+          for (let x = -2; x <= 2; x++) {
+            if (world[iy + y] && world[iy + y][ix + x] !== undefined) {
+              world[iy + y][ix + x] = "dirt";
             }
           }
         }
       }
 
-      player.x = Math.max(0, Math.min(worldWidth
+      let player = {
+        x: 10,
+        y: 10,
+        vx: 0,
+        vy: 0,
+        width: 1,
+        height: 1,
+        grounded: false,
+        hunger: 100,
+        class: "melee"
+      };
+
+      let inventory = { wood: 0, stone: 0, torch: 0 };
+      let stations = [{ name: "Work Bench", x: 20, y: worldHeight / 2 - 1 }];
+      let npcs = [{ name: "Guide", x: 15, y: worldHeight / 2 - 1, service: "tips" }];
+
+      let time = 0;
+      let isNight = false;
+      let isRaining = false;
+      let survivalMode = true;
+
+      function updateTime() {
+        time += 0.01;
+        if (time >= 24) time = 0;
+        isNight = time >= 18 || time < 6;
+        isRaining = Math.random() < 0.001;
+        if (survivalMode) {
+          player.hunger -= 0.01;
+          if (player.hunger <= 0) alert("You starved!");
+        }
+      }
+
+      function drawWorld() {
+        for (let y = 0; y < worldHeight; y++) {
+          for (let x = 0; x < worldWidth; x++) {
+            let tile = world[y][x];
+            if (tile) {
+              ctx.fillStyle = BIOME_COLORS[tile] || "#000";
+              ctx.fillRect((x - cameraX) * tileSize, y * tileSize, tileSize, tileSize);
+            }
+          }
+        }
+      }
+
+      function drawPlayer() {
+        ctx.fillStyle = playerColor;
+        ctx.fillRect((player.x - cameraX) * tileSize, player.y * tileSize, tileSize, tileSize);
+      }
+
+      function drawStations() {
+        stations.forEach(station => {
+          ctx.fillStyle = "#ccc";
+          ctx.fillRect((station.x - cameraX) * tileSize, station.y * tileSize, tileSize, tileSize);
+        });
+      }
+
+      function drawNPCs() {
+        npcs.forEach(npc => {
+          ctx.fillStyle = "#ff0";
+          ctx.fillRect((npc.x - cameraX) * tileSize, npc.y * tileSize, tileSize, tileSize);
+        });
+      }
+
+      function updateInventoryUI() {
+        const inv = document.getElementById("inventory");
+        inv.innerHTML = "";
+        Object.keys(inventory).forEach(item => {
+          const slot = document.createElement("div");
+          slot.textContent = inventory[item] > 0 ? `${item[0].toUpperCase()}:${inventory[item]}` : "";
+          inv.appendChild(slot);
+        });
+      }
+
+      function updatePhysics() {
+        player.vy += 0.5;
+        player.x += player.vx;
+        player.y += player.vy;
+
+        player.grounded = false;
+        for (let y = Math.floor(player.y); y < Math.ceil(player.y + player.height); y++) {
+          for (let x = Math.floor(player.x); x < Math.ceil(player.x + player.width); x++) {
+            if (world[y] && world[y][x]) {
+              if (player.vy > 0) {
+                player.y = y - player.height;
+                player.vy = 0;
+                player.grounded = true;
+              } else if (player.vy < 0) {
+                player.y = y + 1;
+                player.vy = 0;
+              }
+            }
+          }
+        }
+
+        player.x = Math.max(0, Math.min(worldWidth - player.width, player.x));
+        player.y = Math.min(worldHeight - player.height, player.y);
+        cameraX = Math.floor(player.x - canvas.width / tileSize / 2);
+        cameraX = Math.max(0,
