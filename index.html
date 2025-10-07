@@ -109,13 +109,10 @@
       };
 
       let world = Array.from({ length: worldHeight }, () => Array(worldWidth).fill(0));
-      let biomeMap = [];
-
       for (let x = 0; x < worldWidth; x++) {
         let biome = BIOMES[Math.floor(x / (worldWidth / BIOMES.length))];
-        biomeMap[x] = biome;
         for (let y = worldHeight / 2; y < worldHeight; y++) {
-          world[Math.floor(y)][x] = biome;
+          world[y][x] = biome;
         }
       }
 
@@ -228,4 +225,8 @@
         player.x = Math.max(0, Math.min(worldWidth - player.width, player.x));
         player.y = Math.min(worldHeight - player.height, player.y);
         cameraX = Math.floor(player.x - canvas.width / tileSize / 2);
-        cameraX = Math.max(0,
+        cameraX = Math.max(0, Math.min(worldWidth - canvas.width / tileSize, cameraX));
+      }
+
+      function render() {
+        ctx.clear
