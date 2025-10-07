@@ -162,4 +162,4 @@ function exitGame() {
 }
 
 function clearSettings() {
-  document
+  document.getElementById("playerColor").value = "#0000ff
