@@ -2,7 +2,64 @@
 <html>
 <head>
   <title>Terraria-Like Game</title>
-  <link rel="stylesheet" href="style.css" />
+  <style>
+    body {
+      margin: 0;
+      background-color: #1e1e1e;
+      font-family: 'Courier New', monospace;
+      color: white;
+      text-align: center;
+    }
+    #main-menu {
+      padding-top: 50px;
+    }
+    #menu-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 100px);
+      gap: 10px;
+      justify-content: center;
+      margin-top: 20px;
+    }
+    .menu-slot {
+      background-color: #333;
+      border: 2px solid #888;
+      padding: 20px;
+      cursor: pointer;
+      font-size: 16px;
+      color: #fff;
+      box-shadow: inset 0 0 5px #000;
+    }
+    .menu-slot:hover {
+      background-color: #555;
+    }
+    .trash {
+      background-color: #800;
+    }
+    canvas {
+      display: block;
+      margin: auto;
+      background-color: #87CEEB;
+    }
+    #inventory {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: rgba(0,0,0,0.5);
+      padding: 10px;
+      border: 1px solid #fff;
+      display: grid;
+      grid-template-columns: repeat(5, 40px);
+      gap: 5px;
+    }
+    #inventory div {
+      width: 40px;
+      height: 40px;
+      background: #333;
+      border: 1px solid #999;
+      text-align: center;
+      line-height: 40px;
+    }
+  </style>
 </head>
 <body>
   <div id="main-menu">
@@ -32,18 +89,46 @@
   <button onclick="loadGame()" style="display:none;" id="loadBtn">Load</button>
 
   <script>
-    // Game state
     const canvas = document.getElementById("game");
     const ctx = canvas.getContext("2d");
+
     const tileSize = 40;
-    const worldWidth = 100;
-    const worldHeight = 30;
+    const worldWidth = 200;
+    const worldHeight = 40;
     let cameraX = 0;
     let playerColor = "#0000ff";
 
-    let world = Array.from({ length: worldHeight }, (_, y) =>
-      Array.from({ length: worldWidth }, (_, x) => (y > worldHeight / 2 ? "dirt" : 0))
-    );
+    const BIOMES = ["forest", "desert", "jungle", "underworld"];
+    const BIOME_COLORS = {
+      forest: "#228B22",
+      desert: "#DEB887",
+      jungle: "#006400",
+      underworld: "#4B0082",
+      dirt: "#654321"
+    };
+
+    let world = Array.from({ length: worldHeight }, () => Array(worldWidth).fill(0));
+    let biomeMap = [];
+
+    for (let x = 0; x < worldWidth; x++) {
+      let biome = BIOMES[Math.floor(x / (worldWidth / BIOMES.length))];
+      biomeMap[x] = biome;
+      for (let y = worldHeight / 2; y < worldHeight; y++) {
+        world[Math.floor(y)][x] = biome;
+      }
+    }
+
+    for (let i = 0; i < 5; i++) {
+      let ix = Math.floor(Math.random() * worldWidth);
+      let iy = Math.floor(Math.random() * worldHeight / 2);
+      for (let y = -1; y <= 1; y++) {
+        for (let x = -2; x <= 2; x++) {
+          if (world[iy + y] && world[iy + y][ix + x] !== undefined) {
+            world[iy + y][ix + x] = "dirt";
+          }
+        }
+      }
+    }
 
     let player = {
       x: 10,
@@ -52,47 +137,37 @@
       vy: 0,
       width: 1,
       height: 1,
-      grounded: false
+      grounded: false,
+      hunger: 100,
+      class: "melee"
     };
 
     let inventory = { wood: 0, stone: 0, torch: 0 };
     let stations = [{ name: "Work Bench", x: 20, y: worldHeight / 2 - 1 }];
+    let npcs = [{ name: "Guide", x: 15, y: worldHeight / 2 - 1, service: "tips" }];
 
-    // Menu functions
-    function startGame() {
-      document.getElementById("main-menu").style.display = "none";
-      canvas.style.display = "block";
-      document.getElementById("inventory").style.display = "grid";
-      document.getElementById("saveBtn").style.display = "inline";
-      document.getElementById("loadBtn").style.display = "inline";
-      gameLoop();
+    let time = 0;
+    let isNight = false;
+    let isRaining = false;
+    let survivalMode = true;
+
+    function updateTime() {
+      time += 0.01;
+      if (time >= 24) time = 0;
+      isNight = time >= 18 || time < 6;
+      isRaining = Math.random() < 0.001;
+      if (survivalMode) {
+        player.hunger -= 0.01;
+        if (player.hunger <= 0) alert("You starved!");
+      }
     }
 
-    function toggleSettings() {
-      const settings = document.getElementById("settings");
-      settings.style.display = settings.style.display === "none" ? "block" : "none";
-    }
-
-    function exitGame() {
-      alert("Thanks for playing!");
-      location.reload();
-    }
-
-    function clearSettings() {
-      document.getElementById("playerColor").value = "#0000ff";
-      updatePlayerColor();
-    }
-
-    function updatePlayerColor() {
-      playerColor = document.getElementById("playerColor").value;
-    }
-
-    // Game logic
     function drawWorld() {
       for (let y = 0; y < worldHeight; y++) {
         for (let x = 0; x < worldWidth; x++) {
-          if (world[y][x]) {
-            ctx.fillStyle = "#654321";
+          let tile = world[y][x];
+          if (tile) {
+            ctx.fillStyle = BIOME_COLORS[tile] || "#000";
             ctx.fillRect((x - cameraX) * tileSize, y * tileSize, tileSize, tileSize);
           }
         }
@@ -108,6 +183,13 @@
       stations.forEach(station => {
         ctx.fillStyle = "#ccc";
         ctx.fillRect((station.x - cameraX) * tileSize, station.y * tileSize, tileSize, tileSize);
+      });
+    }
+
+    function drawNPCs() {
+      npcs.forEach(npc => {
+        ctx.fillStyle = "#ff0";
+        ctx.fillRect((npc.x - cameraX) * tileSize, npc.y * tileSize, tileSize, tileSize);
       });
     }
 
@@ -142,79 +224,4 @@
         }
       }
 
-      player.x = Math.max(0, Math.min(worldWidth - player.width, player.x));
-      player.y = Math.min(worldHeight - player.height, player.y);
-      cameraX = Math.floor(player.x - canvas.width / tileSize / 2);
-      cameraX = Math.max(0, Math.min(worldWidth - canvas.width / tileSize, cameraX));
-    }
-
-    function checkCrafting() {
-      stations.forEach(station => {
-        if (Math.abs(player.x - station.x) < 1 && Math.abs(player.y - station.y) < 1) {
-          if (inventory.wood >= 2 && inventory.stone >= 1) {
-            inventory.wood -= 2;
-            inventory.stone -= 1;
-            inventory.torch += 1;
-            alert("Crafted a torch!");
-            updateInventoryUI();
-          }
-        }
-      });
-    }
-
-    function render() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      drawWorld();
-      drawStations();
-      drawPlayer();
-    }
-
-    function gameLoop() {
-      updatePhysics();
-      checkCrafting();
-      render();
-      updateInventoryUI();
-      requestAnimationFrame(gameLoop);
-    }
-
-    // Controls
-    document.addEventListener("keydown", (e) => {
-      if (e.key === "ArrowLeft") player.vx = -0.2;
-      if (e.key === "ArrowRight") player.vx = 0.2;
-      if (e.key === " " && player.grounded) player.vy = -10;
-    });
-    document.addEventListener("keyup", (e) => {
-      if (e.key === "ArrowLeft" || e.key === "ArrowRight") player.vx = 0;
-    });
-
-    canvas.addEventListener("click", (e) => {
-      const x = Math.floor(e.offsetX / tileSize + cameraX);
-      const y = Math.floor(e.offsetY / tileSize);
-      if (world[y] && world[y][x]) {
-        inventory.wood++;
-        world[y][x] = 0;
-        updateInventoryUI();
-      }
-    });
-
-    function saveGame() {
-      const data = { player, inventory, world };
-      localStorage.setItem("terrariaSave", JSON.stringify(data));
-      alert("Game saved!");
-    }
-
-    function loadGame() {
-      const data = JSON.parse(localStorage.getItem("terrariaSave"));
-      if (data) {
-        player = data.player;
-        inventory = data.inventory;
-        world = data.world;
-        updateInventoryUI();
-        alert("Game loaded!");
-      } else {
-        alert("No save found.");
-      }
-    }
-  </script>
-</body>
-</html>
+      player.x = Math.max(0, Math.min(worldWidth
