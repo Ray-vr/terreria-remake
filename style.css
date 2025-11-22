@@ -1,1 +1,20 @@
+body {
+    background-color: #f0f0f0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    margin: 0;
+    font-family: sans-serif;
+}
 
+canvas {
+    background-color: #87ceeb; /* Sky blue background */
+    border: 1px solid #000;
+}
+
+div {
+    margin-top: 10px;
+    font-size: 14px;
+}
